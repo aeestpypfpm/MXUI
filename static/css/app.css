@@ -494,3 +494,40 @@ main.dash-main { padding: 22px 0 40px; display: grid; gap: 20px; }
   .modal.top .sheet { border-radius: 14px; border-bottom: 1px solid var(--line); transform: translateY(10px); opacity: 0; }
   .modal.top.open .sheet { transform: none; opacity: 1; }
 }
+
+/* fonts, text & animations */
+body, button, input, select, textarea, h1, h2, h3, h4, .btn, .pill, .tag {
+  font-family: var(--ui);
+}
+.mono, code, pre, .lk .input, .kv span:last-child, .portal-rows span:last-child {
+  font-family: var(--mono);
+}
+.stat b, .ring b, .tbl td, .kv span:last-child {
+  font-variant-numeric: tabular-nums;
+}
+.name b, .portal-card h1 {
+  unicode-bidi: plaintext;
+}
+@keyframes mxFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes mxRowIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+main.dash-main, .portal-card, .form {
+  animation: mxFadeIn .22s ease-out both;
+}
+.row {
+  animation: mxRowIn .18s ease-out both;
+}
+.stat, .ring, .panel, .btn, .ib, .input, .pill {
+  transition: background .16s ease, border-color .16s ease, color .16s ease, opacity .16s ease;
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}

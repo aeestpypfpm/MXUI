@@ -352,7 +352,7 @@ async def ensure_default_link() -> None:
                 "is_default": True,
                 "protocol": "all",
                 "fingerprint": DEFAULT_FINGERPRINT,
-                "alpn": "http/1.1",
+                "alpn": "",
                 "sni": "",
                 "cdn_host": "",
                 "region": "Auto",
