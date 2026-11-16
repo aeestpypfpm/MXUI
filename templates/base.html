@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <title>{% block title %}MX-UI{% endblock %}</title>
+  <link rel="icon" type="image/png" href="/static/img/mxui-icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Vazirmatn:wght@400;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+  <script>
+    try {
+      var t = localStorage.getItem('mx-theme');
+    } catch (e) {}
+    document.documentElement.dataset.theme = t || 'dark';
+  </script>
+  <link rel="stylesheet" href="/static/css/app.css">
+  {% block head_extra %}{% endblock %}
+</head>
+<body class="{% block body_class %}{% endblock %}">
+  {% block content %}{% endblock %}
+  <div id="toast" class="toast" role="status"></div>
+  <script src="/static/js/utils.js"></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>
