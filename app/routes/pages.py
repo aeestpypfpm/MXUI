@@ -27,6 +27,7 @@ async def render_dashboard(request: Request):
             "request": request,
             "platform_name": PLATFORM_INFO["name"],
             "platform_id": PLATFORM_INFO["id"],
+            "panel_location": CONFIG.get("panel_location", {}),
         },
     )
 

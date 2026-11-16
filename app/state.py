@@ -53,6 +53,13 @@ CONFIG: dict = {
     "cdn_host": os.environ.get("CDN_HOST", "").strip(),
     "ws_path": os.environ.get("WS_PATH", "/ws"),
     "xhttp_path": os.environ.get("XHTTP_PATH", "/xhttp"),
+    "panel_location": {
+        "country_code": "us",
+        "country_name": "United States",
+        "city": "Auto",
+        "flag_url": "/static/flags/us.svg",
+        "auto_detected": True,
+    },
 }
 
 AUTH: dict = {
@@ -284,6 +291,8 @@ async def load_state() -> None:
                 for key in ("cdn_host", "ws_path", "xhttp_path"):
                     if key in data["settings"] and isinstance(data["settings"][key], str):
                         CONFIG[key] = data["settings"][key]
+                if isinstance(data["settings"].get("panel_location"), dict):
+                    CONFIG["panel_location"] = data["settings"]["panel_location"]
             if "total_bytes" in data:
                 stats["total_bytes"] = int(data.get("total_bytes") or 0)
             logger.info("State loaded: %d links from %s", len(LINKS), DATA_FILE)
@@ -312,6 +321,7 @@ async def save_state() -> None:
                     "cdn_host": CONFIG.get("cdn_host", ""),
                     "ws_path": CONFIG.get("ws_path", "/ws"),
                     "xhttp_path": CONFIG.get("xhttp_path", "/xhttp"),
+                    "panel_location": CONFIG.get("panel_location"),
                 },
             }
             tmp = DATA_FILE.with_suffix(".tmp")

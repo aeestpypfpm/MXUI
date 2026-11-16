@@ -14,9 +14,10 @@ import uvicorn
 
 from app import xray_manager
 from app.config import PLATFORM_INFO, PUBLIC_PORT, STATIC_DIR
+from app.location import auto_detect_location
 from app.proxy import close_proxy_client, router as proxy_router
 from app.routes import api_auth, api_links, api_system, pages, sub
-from app.state import connections, load_state, log_activity, save_state
+from app.state import CONFIG, connections, load_state, log_activity, save_state
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger("MX-UI")
@@ -55,6 +56,8 @@ async def _prune_connections_loop() -> None:
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
     await load_state()
+    if CONFIG.get("panel_location", {}).get("auto_detected", True):
+        CONFIG["panel_location"] = await auto_detect_location()
 
     xray_ok = False
     for attempt in range(2):

@@ -33,6 +33,7 @@
       <span class="brand-icon"><img src="/static/img/mxui-icon.png" alt="MX-UI"></span>
       <div>MX-UI<small>v2.0.0 · {{ platform_name }}</small></div>
       <span class="pill ok hide-m"><i></i><span id="xray-status-pill">Online</span></span>
+      <button type="button" class="loc-badge hide-m" onclick="toggleModal('settingsModal',true)" title="Panel Location"><img id="panel-flag-img" class="flag-icon" src="{{ panel_location.flag_url or '/static/flags/us.svg' }}" alt="{{ panel_location.country_code or 'us' }}"><span id="panel-location-text">{{ (panel_location.city ~ ', ' if panel_location.city and panel_location.city != 'Auto' else '') ~ (panel_location.country_name or 'United States') }}</span></button>
     </div>
     <div class="tools">
       <button class="ib" onclick="toggleModal('connectionsModal',true)" title="Connections &amp; Activity" aria-label="Connections"><svg class="i"><use href="#conn"/></svg></button>
@@ -75,7 +76,8 @@
           <div class="panel dc" style="--c:var(--c3)"><h4><i></i>Swap</h4><div class="kv"><span>Total</span><span id="swap-total-detail">--</span></div><div class="kv"><span>Used</span><span id="swap-used-detail">--</span></div><div class="kv"><span>Free</span><span id="swap-free-detail">--</span></div><div class="kv"><span>Usage</span><span id="swap-usage-detail">--</span></div></div>
           <div class="panel dc" style="--c:var(--bad)"><h4><i></i>Storage</h4><div class="kv"><span>Total</span><span id="disk-total-detail">--</span></div><div class="kv"><span>Used</span><span id="disk-used-detail">--</span></div><div class="kv"><span>Free</span><span id="disk-free-detail">--</span></div><div class="kv"><span>Usage</span><span id="disk-usage-detail">--</span></div></div>
           <div class="panel dc" style="--c:var(--c2)"><h4><i></i>Network</h4><div class="kv"><span>Total traffic</span><span id="network-total">--</span></div><div class="kv"><span>Total requests</span><span id="network-requests">--</span></div><div class="kv"><span>Active connections</span><span id="network-connections">--</span></div><div class="kv"><span>Errors</span><span id="network-errors">--</span></div></div>
-          <div class="panel dc" style="--c:var(--acc)"><h4><i></i>System</h4><div class="kv"><span>Uptime</span><span id="sys-uptime">--</span></div><div class="kv"><span>Active configs</span><span id="sys-active-configs">--</span></div><div class="kv"><span>Total configs</span><span id="sys-total-configs">--</span></div><div class="kv"><span>Expired configs</span><span id="sys-expired-configs">--</span></div></div>
+          <div class="panel dc" style="--c:var(--acc)"><h4><i></i>System</h4><div class="kv"><span>Location</span><span id="sys-location" style="display:inline-flex;align-items:center;gap:6px"><img id="sys-flag-img" class="flag-icon" src="{{ panel_location.flag_url or '/static/flags/us.svg' }}" alt="flag"><span id="sys-location-text">{{ panel_location.country_name or 'United States' }}</span></span></div>
+          <div class="kv"><span>Uptime</span><span id="sys-uptime">--</span></div><div class="kv"><span>Active configs</span><span id="sys-active-configs">--</span></div><div class="kv"><span>Total configs</span><span id="sys-total-configs">--</span></div><div class="kv"><span>Expired configs</span><span id="sys-expired-configs">--</span></div></div>
         </div>
       </div>
     </div>
@@ -274,6 +276,13 @@
   <div class="sheet" tabindex="-1" style="--w:560px">
     <div class="mh"><div><h3 id="settingsModal-t">Settings</h3><p>Cross-region CDN routing &amp; admin security.</p></div><button class="ib sm" onclick="toggleModal('settingsModal',false)" aria-label="Close"><svg class="i"><use href="#x"/></svg></button></div>
     <div class="mb">
+      <div class="c2">
+        <span class="sub">Panel Location</span>
+        <div class="g2">
+          <label class="field"><span>Country</span><div style="display:flex;align-items:center;gap:8px"><img id="settings-flag-preview" class="flag-icon" style="width:26px;height:19.5px" src="{{ panel_location.flag_url or '/static/flags/us.svg' }}" alt="flag"><select id="settings-country" class="input" onchange="previewSettingsFlag()"></select></div></label>
+          <label class="field"><span>City / Datacenter (optional)</span><input type="text" id="settings-city" class="input" placeholder="e.g. Frankfurt"></label>
+        </div>
+      </div>
       <div class="c2">
         <span class="sub">Global CDN / Edge Host</span>
         <label class="field"><span>Default CDN Domain (optional)</span><input type="text" id="settings-cdn-host" class="input" placeholder="e.g. edge.yourdomain.com"></label>

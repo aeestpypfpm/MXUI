@@ -16,6 +16,7 @@ from app.config import (
     is_paas_default_domain,
 )
 from app.ip_suggest import get_random_ips
+from app.location import build_location, load_countries
 from app.state import (
     CONFIG,
     LINKS,
@@ -80,6 +81,7 @@ async def get_stats(_=Depends(require_auth)):
         "xray_running": xray_st.get("xray_running", False),
         "xray_version": xray_st.get("xray_version", "unknown"),
         "platform": PLATFORM_INFO,
+        "panel_location": CONFIG.get("panel_location"),
         **sys_metrics,
     }
 
@@ -112,6 +114,7 @@ async def get_platform(request: Request, _=Depends(require_auth)):
         "netloc": netloc,
         "data_dir": str(DATA_DIR),
         "cdn_host": CONFIG.get("cdn_host", ""),
+        "panel_location": CONFIG.get("panel_location"),
         "xray": xray_st,
     }
 
@@ -152,10 +155,16 @@ async def apply_ips(request: Request, _=Depends(require_auth)):
     return {"ok": True}
 
 
+@router.get("/api/countries")
+async def get_countries(_=Depends(require_auth)):
+    return {"countries": load_countries()}
+
+
 @router.get("/api/settings")
 async def get_settings(_=Depends(require_auth)):
     return {
         "cdn_host": CONFIG.get("cdn_host", ""),
+        "panel_location": CONFIG.get("panel_location"),
         "dashboard_path": CONFIG.get("dashboard_path", "/dashboard"),
         "login_path": CONFIG.get("login_path", "/login"),
         "sub_path": CONFIG.get("sub_path", "/sub"),
@@ -167,9 +176,13 @@ async def update_settings(request: Request, _=Depends(require_auth)):
     body = await request.json()
     if "cdn_host" in body:
         CONFIG["cdn_host"] = str(body["cdn_host"] or "").strip()[:120]
+    if "country_code" in body:
+        cc = str(body.get("country_code") or "us").strip().lower()
+        city = str(body.get("city") or "").strip()[:60]
+        CONFIG["panel_location"] = build_location(cc, city, auto_detected=False)
     await save_state()
-    log_activity("settings", "Updated global CDN / network settings", "info")
-    return {"ok": True, "cdn_host": CONFIG["cdn_host"]}
+    log_activity("settings", "Updated panel location & network settings", "info")
+    return {"ok": True, "cdn_host": CONFIG["cdn_host"], "panel_location": CONFIG.get("panel_location")}
 
 
 @router.get("/api/database/export")

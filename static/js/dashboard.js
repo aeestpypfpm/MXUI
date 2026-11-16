@@ -632,7 +632,43 @@ async function downloadDatabase() {
   }
 }
 
+var _countriesLoaded = false;
+function applyPanelLocationUI(loc) {
+  if (!loc) return;
+  var flagUrl = loc.flag_url || ('/static/flags/' + (loc.country_code || 'un') + '.svg');
+  var label = (loc.city && loc.city !== 'Auto' ? loc.city + ', ' : '') + (loc.country_name || 'Global');
+  ['panel-flag-img', 'sys-flag-img'].forEach(function (id) {
+    var img = $(id);
+    if (img) { img.src = flagUrl; img.alt = loc.country_code || 'flag'; }
+  });
+  set('panel-location-text', label);
+  set('sys-location-text', label);
+}
+
+function previewSettingsFlag() {
+  var sel = $('settings-country');
+  var prev = $('settings-flag-preview');
+  if (sel && prev && sel.value) {
+    prev.src = '/static/flags/' + sel.value + '.svg';
+  }
+}
+
 async function loadSettingsModal() {
+  if (!_countriesLoaded) {
+    try {
+      var rc = await fetch('/api/countries');
+      if (rc.ok) {
+        var dc = await rc.json();
+        var sel = $('settings-country');
+        if (sel && dc.countries) {
+          sel.innerHTML = dc.countries.map(function (c) {
+            return '<option value="' + esc(c.code) + '">' + esc(c.name) + ' (' + c.code.toUpperCase() + ')</option>';
+          }).join('');
+          _countriesLoaded = true;
+        }
+      }
+    } catch (e) {}
+  }
   ['current', 'new', 'confirm'].forEach(function (k) {
     var el = $('settings-' + k + '-pw');
     if (el) el.value = '';
@@ -644,6 +680,11 @@ async function loadSettingsModal() {
     if (r.ok) {
       var s = await r.json();
       if ($('settings-cdn-host')) $('settings-cdn-host').value = s.cdn_host || '';
+      if (s.panel_location) {
+        if ($('settings-country')) $('settings-country').value = s.panel_location.country_code || 'us';
+        if ($('settings-city')) $('settings-city').value = s.panel_location.city || '';
+        previewSettingsFlag();
+      }
     }
   } catch (e) {}
 }
@@ -651,9 +692,13 @@ async function loadSettingsModal() {
 async function saveNetworkSettings() {
   try {
     var cdn = $('settings-cdn-host') ? $('settings-cdn-host').value.trim() : '';
-    var r = await J('/api/settings', { cdn_host: cdn });
+    var cc = $('settings-country') ? $('settings-country').value : 'us';
+    var city = $('settings-city') ? $('settings-city').value.trim() : '';
+    var r = await J('/api/settings', { cdn_host: cdn, country_code: cc, city: city });
     if (!r.ok) throw new Error('Could not save settings');
-    toast('Network settings saved', 'ok');
+    var d = await r.json();
+    if (d.panel_location) applyPanelLocationUI(d.panel_location);
+    toast('Location & network settings saved', 'ok');
     loadConfigs();
   } catch (e) {
     toast(e.message, 'err');
