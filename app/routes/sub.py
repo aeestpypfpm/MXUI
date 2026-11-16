@@ -66,8 +66,16 @@ async def render_sub_user(request: Request, uuid: str):
     remained = "Unlimited" if limit == 0 else fmt_bytes(max(0, limit - used))
     usage_pct = 0.0 if limit == 0 else round(min(100.0, (used / limit) * 100.0), 1)
 
+    def _tag_from_uri(uri: str, idx: int) -> str:
+        if "#" in uri:
+            from urllib.parse import unquote
+            rem = unquote(uri.split("#", 1)[1])
+            if "(" in rem and rem.endswith(")"):
+                return rem.rsplit("(", 1)[1][:-1]
+        return "Primary" if idx == 0 else f"Edge {idx}"
+
     link_items = [
-        {"tag": "Primary" if i == 0 else f"Edge {i}", "is_primary": i == 0, "uri": uri}
+        {"tag": _tag_from_uri(uri, i), "is_primary": i == 0, "uri": uri}
         for i, uri in enumerate(all_links)
     ]
 

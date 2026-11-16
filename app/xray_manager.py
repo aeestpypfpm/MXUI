@@ -103,11 +103,16 @@ def _build_config() -> dict:
     for uid, link in list(LINKS.items()):
         if not is_link_allowed(link):
             continue
-        family, _, _ = parse_protocol(link.get("protocol", "vless-ws"))
-        if family == "trojan":
+        proto = link.get("protocol", "vless-ws")
+        if link.get("is_default") or proto == "all":
+            vless_clients.append({"id": uid, "email": uid, "level": 0})
             trojan_clients.append({"password": uid, "email": uid, "level": 0})
         else:
-            vless_clients.append({"id": uid, "email": uid, "level": 0})
+            family, _, _ = parse_protocol(proto)
+            if family == "trojan":
+                trojan_clients.append({"password": uid, "email": uid, "level": 0})
+            else:
+                vless_clients.append({"id": uid, "email": uid, "level": 0})
 
     xhttp_key = "splithttpSettings" if XHTTP_TRANSPORT == "splithttp" else "xhttpSettings"
 

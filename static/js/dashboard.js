@@ -197,6 +197,7 @@ async function getLinks() {
 }
 
 function protoBadge(proto) {
+  if (proto === 'all') return 'ALL MODES · XHTTP + WS';
   var p = (proto || 'vless-ws').toUpperCase();
   return p.replace('-PACKET-UP', ' · XHTTP-P').replace('-STREAM-UP', ' · XHTTP-S').replace('-WS', ' · WS');
 }
@@ -211,7 +212,7 @@ function row(l) {
   var sp = l.speed_limit_bytes > 0 ? ((l.speed_limit_bytes * 8) / 1048576).toFixed(1) + ' Mbps' : 'Unlimited';
   var exp = l.expires_at ? new Date(l.expires_at).toISOString().slice(0, 10) : 'Unlimited';
   var ap = l.applied_ips_count || 0;
-  var net = proto.indexOf('xhttp') >= 0 ? 'xhttp' : 'ws';
+  var net = proto === 'all' ? 'xhttp + ws' : (proto.indexOf('xhttp') >= 0 ? 'xhttp' : 'ws');
 
   var out = '<div class="row' + (def ? ' def' : '') + '" data-uuid="' + esc(l.uuid) + '">';
   out += '<div><div class="name"><span class="tag acc">' + esc(protoBadge(proto)) + '</span><b>' + esc(l.label || 'Unnamed') + '</b>';

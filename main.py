@@ -88,7 +88,42 @@ async def lifespan(_app: FastAPI):
         await close_proxy_client()
 
 
-app = FastAPI(title="MX-UI", version="2.0.0", docs_url=None, redoc_url=None, lifespan=lifespan)
+app = FastAPI(title="MX-UI", version="2.0.1", docs_url=None, redoc_url=None)
+
+_bg_tasks = []
+
+@app.on_event("startup")
+async def _on_startup():
+    await load_state()
+    await ensure_default_link()
+    CONFIG["panel_location"] = await auto_detect_location()
+
+    xray_ok = False
+    for attempt in range(2):
+        try:
+            xray_ok = await xray_manager.start()
+            if xray_ok:
+                await xray_manager.diagnose_and_log()
+                break
+        except Exception as exc:
+            logger.warning("[xray] attempt %d failed: %s", attempt + 1, exc)
+        await asyncio.sleep(0.5)
+
+    if not xray_ok:
+        log_activity("system", f"Panel started on {PLATFORM_INFO['name']} (Xray binary not active)", "warn")
+    else:
+        log_activity("system", f"MX-UI & Xray Core started on {PLATFORM_INFO['name']}", "ok")
+
+    _bg_tasks.append(asyncio.create_task(_xray_stats_loop()))
+    _bg_tasks.append(asyncio.create_task(_prune_connections_loop()))
+
+@app.on_event("shutdown")
+async def _on_shutdown():
+    for t in _bg_tasks:
+        t.cancel()
+    await save_state()
+    await xray_manager.stop()
+    await close_proxy_client()
 
 app.add_middleware(
     CORSMiddleware,

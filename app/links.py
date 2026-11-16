@@ -56,6 +56,16 @@ def generate_proxy_link(
     return f"{family}://{uuid}@{address}:{port_val}?{query}#{quote(remark)}"
 
 
+ALL_MODES = (
+    ("vless-xhttp-packet-up", "VLESS · XHTTP packet-up"),
+    ("vless-xhttp-stream-up", "VLESS · XHTTP stream-up"),
+    ("vless-ws", "VLESS · WS"),
+    ("trojan-xhttp-packet-up", "Trojan · XHTTP packet-up"),
+    ("trojan-xhttp-stream-up", "Trojan · XHTTP stream-up"),
+    ("trojan-ws", "Trojan · WS"),
+)
+
+
 def primary_link_for_config(
     link: dict,
     uid: str,
@@ -63,11 +73,14 @@ def primary_link_for_config(
     connect_port: int = 443,
     scheme: str = "https",
 ) -> str:
+    proto = link.get("protocol", DEFAULT_PROTOCOL)
+    if link.get("is_default") or proto == "all":
+        proto = "vless-xhttp-packet-up"
     return generate_proxy_link(
         uuid=uid,
         host=host,
         remark=f"MX-UI-{link.get('label', 'Config')}",
-        protocol=link.get("protocol", DEFAULT_PROTOCOL),
+        protocol=proto,
         fingerprint=link.get("fingerprint"),
         alpn=link.get("alpn"),
         connect_port=connect_port,
@@ -91,37 +104,44 @@ def build_all_proxy_links(
     cdn_host = link.get("cdn_host") or None
     base_remark = f"MX-UI-{link.get('label', 'Config')}"
 
-    out = [
-        generate_proxy_link(
-            uuid=uid,
-            host=host,
-            remark=f"{base_remark} (Primary)",
-            protocol=proto,
-            fingerprint=fp,
-            alpn=alpn,
-            connect_port=connect_port,
-            scheme=scheme,
-            sni_override=sni,
-            cdn_host=cdn_host,
-        )
-    ]
-    for i, entry in enumerate(link.get("ip_pool") or [], start=1):
-        ip = entry.get("ip")
-        port = int(entry.get("port") or connect_port or 443)
-        if ip:
-            out.append(
-                generate_proxy_link(
-                    uuid=uid,
-                    host=host,
-                    remark=f"{base_remark} (Edge {i})",
-                    protocol=proto,
-                    fingerprint=fp,
-                    alpn=alpn,
-                    connect_address=ip,
-                    connect_port=port,
-                    scheme=scheme,
-                    sni_override=sni,
-                    cdn_host=cdn_host,
-                )
+    if link.get("is_default") or proto == "all":
+        modes = ALL_MODES
+    else:
+        modes = ((proto, "Primary"),)
+
+    out: list[str] = []
+    for mode_proto, mode_label in modes:
+        out.append(
+            generate_proxy_link(
+                uuid=uid,
+                host=host,
+                remark=f"{base_remark} ({mode_label})",
+                protocol=mode_proto,
+                fingerprint=fp,
+                alpn=alpn,
+                connect_port=connect_port,
+                scheme=scheme,
+                sni_override=sni,
+                cdn_host=cdn_host,
             )
+        )
+        for i, entry in enumerate(link.get("ip_pool") or [], start=1):
+            ip = entry.get("ip")
+            port = int(entry.get("port") or connect_port or 443)
+            if ip:
+                out.append(
+                    generate_proxy_link(
+                        uuid=uid,
+                        host=host,
+                        remark=f"{base_remark} ({mode_label} · Edge {i})",
+                        protocol=mode_proto,
+                        fingerprint=fp,
+                        alpn=alpn,
+                        connect_address=ip,
+                        connect_port=port,
+                        scheme=scheme,
+                        sni_override=sni,
+                        cdn_host=cdn_host,
+                    )
+                )
     return out

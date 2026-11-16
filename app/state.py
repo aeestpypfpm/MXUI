@@ -281,6 +281,8 @@ async def load_state() -> None:
                     link.setdefault("sni", "")
                     link.setdefault("cdn_host", "")
                     link.setdefault("region", "Auto")
+                    if link.get("is_default"):
+                        link["protocol"] = "all"
             if "password_hash" in data:
                 AUTH["password_hash"] = data["password_hash"]
             if "paths" in data:
@@ -348,7 +350,7 @@ async def ensure_default_link() -> None:
                 "expires_at": None,
                 "note": "Protected default inbound configuration",
                 "is_default": True,
-                "protocol": DEFAULT_PROTOCOL,
+                "protocol": "all",
                 "fingerprint": DEFAULT_FINGERPRINT,
                 "alpn": "http/1.1",
                 "sni": "",
