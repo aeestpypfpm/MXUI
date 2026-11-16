@@ -97,22 +97,32 @@ def _detect_version() -> None:
 
 
 def _build_config() -> dict:
-    vless_clients = []
-    trojan_clients = []
+    vless_ws_clients = []
+    vless_xhttp_clients = []
+    trojan_ws_clients = []
+    trojan_xhttp_clients = []
 
     for uid, link in list(LINKS.items()):
         if not is_link_allowed(link):
             continue
         proto = link.get("protocol", "vless-ws")
         if link.get("is_default") or proto == "all":
-            vless_clients.append({"id": uid, "email": uid, "level": 0})
-            trojan_clients.append({"password": uid, "email": uid, "level": 0})
+            vless_ws_clients.append({"id": uid, "email": f"{uid}@vless-ws", "level": 0})
+            vless_xhttp_clients.append({"id": uid, "email": f"{uid}@vless-xhttp", "level": 0})
+            trojan_ws_clients.append({"password": uid, "email": f"{uid}@trojan-ws", "level": 0})
+            trojan_xhttp_clients.append({"password": uid, "email": f"{uid}@trojan-xhttp", "level": 0})
         else:
-            family, _, _ = parse_protocol(proto)
+            family, transport, _ = parse_protocol(proto)
             if family == "trojan":
-                trojan_clients.append({"password": uid, "email": uid, "level": 0})
+                if transport == "xhttp":
+                    trojan_xhttp_clients.append({"password": uid, "email": f"{uid}@trojan-xhttp", "level": 0})
+                else:
+                    trojan_ws_clients.append({"password": uid, "email": f"{uid}@trojan-ws", "level": 0})
             else:
-                vless_clients.append({"id": uid, "email": uid, "level": 0})
+                if transport == "xhttp":
+                    vless_xhttp_clients.append({"id": uid, "email": f"{uid}@vless-xhttp", "level": 0})
+                else:
+                    vless_ws_clients.append({"id": uid, "email": f"{uid}@vless-ws", "level": 0})
 
     xhttp_key = "splithttpSettings" if XHTTP_TRANSPORT == "splithttp" else "xhttpSettings"
 
@@ -122,7 +132,7 @@ def _build_config() -> dict:
             "listen": "127.0.0.1",
             "port": WS_PORT,
             "protocol": "vless",
-            "settings": {"clients": vless_clients, "decryption": "none"},
+            "settings": {"clients": vless_ws_clients, "decryption": "none"},
             "streamSettings": {"network": "ws", "wsSettings": {"path": "/ws"}},
             "sniffing": {"enabled": True, "destOverride": ["http", "tls", "quic"]},
         },
@@ -131,7 +141,7 @@ def _build_config() -> dict:
             "listen": "127.0.0.1",
             "port": XHTTP_PORT,
             "protocol": "vless",
-            "settings": {"clients": vless_clients, "decryption": "none"},
+            "settings": {"clients": vless_xhttp_clients, "decryption": "none"},
             "streamSettings": {"network": XHTTP_TRANSPORT, xhttp_key: {"path": "/xhttp"}},
             "sniffing": {"enabled": True, "destOverride": ["http", "tls", "quic"]},
         },
@@ -140,7 +150,7 @@ def _build_config() -> dict:
             "listen": "127.0.0.1",
             "port": TROJAN_WS_PORT,
             "protocol": "trojan",
-            "settings": {"clients": trojan_clients},
+            "settings": {"clients": trojan_ws_clients},
             "streamSettings": {"network": "ws", "wsSettings": {"path": "/ws-trojan"}},
             "sniffing": {"enabled": True, "destOverride": ["http", "tls", "quic"]},
         },
@@ -149,7 +159,7 @@ def _build_config() -> dict:
             "listen": "127.0.0.1",
             "port": TROJAN_XHTTP_PORT,
             "protocol": "trojan",
-            "settings": {"clients": trojan_clients},
+            "settings": {"clients": trojan_xhttp_clients},
             "streamSettings": {"network": XHTTP_TRANSPORT, xhttp_key: {"path": "/xhttp-trojan"}},
             "sniffing": {"enabled": True, "destOverride": ["http", "tls", "quic"]},
         },
@@ -387,8 +397,9 @@ async def query_stats(reset: bool = True) -> dict:
             continue
         seg = key.split(">>>")
         if len(seg) == 4 and seg[0] == "user" and seg[2] == "traffic":
-            uid, direction = seg[1], seg[3]
-            parsed.setdefault(uid, {})[direction] = val
+            uid = seg[1].split("@", 1)[0]
+            direction = seg[3]
+            parsed.setdefault(uid, {})[direction] = parsed.get(uid, {}).get(direction, 0) + val
     return parsed
 
 

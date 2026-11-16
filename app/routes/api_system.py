@@ -185,7 +185,7 @@ async def update_settings(request: Request, _=Depends(require_auth)):
 @router.get("/api/database/export")
 async def export_db(_=Depends(require_auth)):
     async with LINKS_LOCK:
-        return {"links": dict(LINKS), "exported_at": datetime.now().isoformat(), "version": "2.0.0"}
+        return {"links": dict(LINKS), "exported_at": datetime.now().isoformat(), "version": "1.0.0"}
 
 
 @router.post("/api/database/import")

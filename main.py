@@ -1,4 +1,4 @@
-"""MX-UI v2.0.0 — Multi-Platform VLESS/Trojan (WS & XHTTP) Control Plane."""
+"""MX-UI v1.0.0 — Multi-Platform VLESS/Trojan (WS & XHTTP) Control Plane."""
 from __future__ import annotations
 
 import asyncio
@@ -88,7 +88,7 @@ async def lifespan(_app: FastAPI):
         await close_proxy_client()
 
 
-app = FastAPI(title="MX-UI", version="2.0.1", docs_url=None, redoc_url=None)
+app = FastAPI(title="MX-UI", version="1.0.0", docs_url=None, redoc_url=None)
 
 _bg_tasks = []
 

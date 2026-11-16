@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}MX-UI v2.0.0 · Control Plane{% endblock %}
+{% block title %}MX-UI v1.0.0 · Control Plane{% endblock %}
 {% block content %}
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
   <symbol id="plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
@@ -31,7 +31,7 @@
   <div class="wrap">
     <div class="brand">
       <span class="brand-icon"><img src="/static/img/mxui-icon.png" alt="MX-UI"></span>
-      <div>MX-UI<small>v2.0.0 · {{ platform_name }}</small></div>
+      <div>MX-UI<small>v1.0.0 · {{ platform_name }}</small></div>
       <span class="pill ok hide-m"><i></i><span id="xray-status-pill">Online</span></span>
       <span class="loc-badge hide-m"><img id="panel-flag-img" class="flag-icon" src="{{ panel_location.flag_url or '/static/flags/us.svg' }}" alt="{{ panel_location.country_code or 'us' }}"><span id="panel-location-text">{{ panel_location.country_name or 'United States' }}</span></span>
     </div>
@@ -93,7 +93,7 @@
     </div>
     <div id="config-list" style="border-top:1px solid var(--line)"></div>
     <div class="dfoot">
-      <span>MX-UI v2.0.0 · Created by Muvixo</span>
+      <span>MX-UI v1.0.0 · Created by Muvixo</span>
       <span>Uptime <b id="uptime-display" class="mono">00:00:00</b> · Platform <b style="color:var(--acc)">{{ platform_name }}</b></span>
     </div>
   </section>

@@ -2,7 +2,7 @@
   <img src="static/img/mxui-icon.png" alt="MX-UI Icon" width="110" />
 </p>
 
-<h1 align="center">MX-UI v2.0.0</h1>
+<h1 align="center">MX-UI v1.0.0</h1>
 
 <p align="center">
   Multi-platform VLESS &amp; Trojan (WebSocket &amp; XHTTP) control plane powered by Xray Core.<br/>
