@@ -1,8 +1,9 @@
-"""High-performance WebSocket & XHTTP reverse-proxy routes to Xray Core with keepalive & tracking."""
+"""High-performance WebSocket & XHTTP reverse-proxy routes to Xray Core."""
 from __future__ import annotations
 
 import asyncio
 from datetime import datetime
+import inspect
 import logging
 import secrets
 
@@ -23,7 +24,7 @@ def get_proxy_client() -> httpx.AsyncClient:
     global _http_proxy_client
     if _http_proxy_client is None or _http_proxy_client.is_closed:
         _http_proxy_client = httpx.AsyncClient(
-            limits=httpx.Limits(max_connections=400, max_keepalive_connections=100),
+            limits=httpx.Limits(max_connections=500, max_keepalive_connections=120),
             timeout=httpx.Timeout(connect=10.0, read=None, write=30.0, pool=10.0),
         )
     return _http_proxy_client
@@ -54,7 +55,11 @@ async def _relay_ws(websocket: WebSocket, target_port: int, path: str, transport
         await websocket.close(code=1011, reason="websockets library unavailable")
         return
 
-    await websocket.accept()
+    # Forward requested WebSocket subprotocol if present
+    subproto_hdr = websocket.headers.get("sec-websocket-protocol")
+    subprotocols = [s.strip() for s in subproto_hdr.split(",") if s.strip()] if subproto_hdr else None
+    await websocket.accept(subprotocol=subprotocols[0] if subprotocols else None)
+
     ip = _ws_client_ip(websocket)
     conn_id = secrets.token_urlsafe(6)
     connections[conn_id] = {
@@ -66,24 +71,33 @@ async def _relay_ws(websocket: WebSocket, target_port: int, path: str, transport
     }
     stats["total_requests"] += 1
 
-    target_url = f"ws://127.0.0.1:{target_port}{path}"
-    extra_headers = {"X-Forwarded-For": ip}
+    qs = f"?{websocket.url.query}" if websocket.url.query else ""
+    target_url = f"ws://127.0.0.1:{target_port}{path}{qs}"
+    fwd_headers = {"X-Forwarded-For": ip}
+    if websocket.headers.get("host"):
+        fwd_headers["Host"] = websocket.headers["host"]
     ua = websocket.headers.get("user-agent")
     if ua:
-        extra_headers["User-Agent"] = ua
+        fwd_headers["User-Agent"] = ua
+
+    # Support both websockets <=13 (extra_headers) and >=14 (additional_headers)
+    connect_kwargs: dict = {
+        "max_size": None,
+        "ping_interval": None,
+        "open_timeout": 10,
+        "close_timeout": 5,
+    }
+    if subprotocols:
+        connect_kwargs["subprotocols"] = subprotocols
+    sig_params = inspect.signature(_ws.connect).parameters
+    if "additional_headers" in sig_params:
+        connect_kwargs["additional_headers"] = fwd_headers
+    elif "extra_headers" in sig_params:
+        connect_kwargs["extra_headers"] = fwd_headers
 
     xray_ws = None
     try:
-        # ping_interval=25 prevents cross-region PaaS load balancers (Railway/Render/CF/Fly) from dropping idle WS
-        xray_ws = await _ws.connect(
-            target_url,
-            max_size=None,
-            ping_interval=25,
-            ping_timeout=15,
-            open_timeout=10,
-            close_timeout=5,
-            additional_headers=extra_headers,
-        )
+        xray_ws = await _ws.connect(target_url, **connect_kwargs)
     except Exception as exc:
         logger.warning("[ws-proxy:%s] connect failed: %s", transport_name, exc)
         stats["total_errors"] += 1
@@ -101,9 +115,12 @@ async def _relay_ws(websocket: WebSocket, target_port: int, path: str, transport
                 msg = await websocket.receive()
                 if msg.get("type") == "websocket.disconnect":
                     break
-                data = msg.get("bytes") or (msg.get("text") or "").encode()
+                data = msg.get("bytes")
+                if data is None and msg.get("text") is not None:
+                    data = msg["text"].encode()
                 if data:
-                    connections[conn_id]["bytes"] += len(data)
+                    if conn_id in connections:
+                        connections[conn_id]["bytes"] += len(data)
                     await xray_ws.send(data)
         except Exception:
             pass
@@ -117,10 +134,12 @@ async def _relay_ws(websocket: WebSocket, target_port: int, path: str, transport
         try:
             async for m in xray_ws:
                 if isinstance(m, bytes):
-                    connections[conn_id]["bytes"] += len(m)
+                    if conn_id in connections:
+                        connections[conn_id]["bytes"] += len(m)
                     await websocket.send_bytes(m)
                 else:
-                    connections[conn_id]["bytes"] += len(m.encode())
+                    if conn_id in connections:
+                        connections[conn_id]["bytes"] += len(m.encode())
                     await websocket.send_text(m)
         except Exception:
             pass
@@ -147,7 +166,7 @@ async def _relay_ws(websocket: WebSocket, target_port: int, path: str, transport
 
     connections.pop(conn_id, None)
     try:
-        if xray_ws and not xray_ws.closed:
+        if xray_ws and not getattr(xray_ws, "closed", True):
             await xray_ws.close()
     except Exception:
         pass
@@ -201,7 +220,7 @@ async def _proxy_xhttp(request: Request, target_port: int, prefix: str, rest: st
 
         async def stream_body():
             try:
-                async for chunk in resp.aiter_bytes():
+                async for chunk in resp.aiter_raw():
                     if conn_id in connections:
                         connections[conn_id]["bytes"] += len(chunk)
                     yield chunk

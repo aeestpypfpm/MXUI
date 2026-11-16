@@ -107,7 +107,7 @@ def _build_config() -> dict:
         if family == "trojan":
             trojan_clients.append({"password": uid, "email": uid, "level": 0})
         else:
-            vless_clients.append({"id": uid, "email": uid, "level": 0, "flow": ""})
+            vless_clients.append({"id": uid, "email": uid, "level": 0})
 
     xhttp_key = "splithttpSettings" if XHTTP_TRANSPORT == "splithttp" else "xhttpSettings"
 
@@ -308,31 +308,22 @@ async def stop() -> None:
     XRAY_PROC = None
 
 
+_RELOAD_LOCK = asyncio.Lock()
+
 async def reload_config() -> None:
-    try:
-        find_binary()
-    except RuntimeError:
-        return
-
-    _write_config()
-    if not (XRAY_PROC and XRAY_PROC.poll() is None):
-        _spawn()
-        return
-
-    if sys.platform.startswith("win"):
+    async with _RELOAD_LOCK:
+        try:
+            find_binary()
+        except RuntimeError:
+            return
         await stop()
-        _spawn()
-        return
-
-    try:
-        XRAY_PROC.send_signal(signal.SIGHUP)
-        await asyncio.sleep(0.4)
-        if XRAY_PROC.poll() is not None:
-            await stop()
-            _spawn()
-    except Exception:
-        await stop()
-        _spawn()
+        if _spawn():
+            await asyncio.gather(
+                _wait_listen("127.0.0.1", WS_PORT, timeout=5.0),
+                _wait_listen("127.0.0.1", XHTTP_PORT, timeout=5.0),
+                _wait_listen("127.0.0.1", TROJAN_WS_PORT, timeout=5.0),
+                _wait_listen("127.0.0.1", TROJAN_XHTTP_PORT, timeout=5.0),
+            )
 
 
 async def _config_watcher() -> None:

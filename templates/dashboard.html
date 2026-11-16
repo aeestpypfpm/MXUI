@@ -33,7 +33,7 @@
       <span class="brand-icon"><img src="/static/img/mxui-icon.png" alt="MX-UI"></span>
       <div>MX-UI<small>v2.0.0 · {{ platform_name }}</small></div>
       <span class="pill ok hide-m"><i></i><span id="xray-status-pill">Online</span></span>
-      <button type="button" class="loc-badge hide-m" onclick="toggleModal('settingsModal',true)" title="Panel Location"><img id="panel-flag-img" class="flag-icon" src="{{ panel_location.flag_url or '/static/flags/us.svg' }}" alt="{{ panel_location.country_code or 'us' }}"><span id="panel-location-text">{{ (panel_location.city ~ ', ' if panel_location.city and panel_location.city != 'Auto' else '') ~ (panel_location.country_name or 'United States') }}</span></button>
+      <span class="loc-badge hide-m"><img id="panel-flag-img" class="flag-icon" src="{{ panel_location.flag_url or '/static/flags/us.svg' }}" alt="{{ panel_location.country_code or 'us' }}"><span id="panel-location-text">{{ panel_location.country_name or 'United States' }}</span></span>
     </div>
     <div class="tools">
       <button class="ib" onclick="toggleModal('connectionsModal',true)" title="Connections &amp; Activity" aria-label="Connections"><svg class="i"><use href="#conn"/></svg></button>
@@ -108,7 +108,7 @@
         <label class="field"><span>Name</span><input id="new-label" type="text" class="input" placeholder="e.g. Germany-XHTTP" autocomplete="off"></label>
         <label class="field"><span>Protocol</span><select id="new-protocol" class="input">
           <option value="vless-ws">VLESS + WebSocket</option>
-          <option value="vless-xhttp-packet-up">VLESS + XHTTP (packet-up)</option>
+          <option value="vless-xhttp-packet-up">VLESS + XHTTP (packet-up · Recommended)</option>
           <option value="vless-xhttp-stream-up">VLESS + XHTTP (stream-up)</option>
           <option value="trojan-ws">Trojan + WebSocket</option>
           <option value="trojan-xhttp-packet-up">Trojan + XHTTP (packet-up)</option>
@@ -154,7 +154,7 @@
         <label class="field"><span>Name</span><input id="edit-label" type="text" class="input" autocomplete="off"></label>
         <label class="field"><span>Protocol</span><select id="edit-protocol" class="input">
           <option value="vless-ws">VLESS + WebSocket</option>
-          <option value="vless-xhttp-packet-up">VLESS + XHTTP (packet-up)</option>
+          <option value="vless-xhttp-packet-up">VLESS + XHTTP (packet-up · Recommended)</option>
           <option value="vless-xhttp-stream-up">VLESS + XHTTP (stream-up)</option>
           <option value="trojan-ws">Trojan + WebSocket</option>
           <option value="trojan-xhttp-packet-up">Trojan + XHTTP (packet-up)</option>
@@ -276,13 +276,6 @@
   <div class="sheet" tabindex="-1" style="--w:560px">
     <div class="mh"><div><h3 id="settingsModal-t">Settings</h3><p>Cross-region CDN routing &amp; admin security.</p></div><button class="ib sm" onclick="toggleModal('settingsModal',false)" aria-label="Close"><svg class="i"><use href="#x"/></svg></button></div>
     <div class="mb">
-      <div class="c2">
-        <span class="sub">Panel Location</span>
-        <div class="g2">
-          <label class="field"><span>Country</span><div style="display:flex;align-items:center;gap:8px"><img id="settings-flag-preview" class="flag-icon" style="width:26px;height:19.5px" src="{{ panel_location.flag_url or '/static/flags/us.svg' }}" alt="flag"><select id="settings-country" class="input" onchange="previewSettingsFlag()"></select></div></label>
-          <label class="field"><span>City / Datacenter (optional)</span><input type="text" id="settings-city" class="input" placeholder="e.g. Frankfurt"></label>
-        </div>
-      </div>
       <div class="c2">
         <span class="sub">Global CDN / Edge Host</span>
         <label class="field"><span>Default CDN Domain (optional)</span><input type="text" id="settings-cdn-host" class="input" placeholder="e.g. edge.yourdomain.com"></label>

@@ -17,7 +17,7 @@ from app.config import PLATFORM_INFO, PUBLIC_PORT, STATIC_DIR
 from app.location import auto_detect_location
 from app.proxy import close_proxy_client, router as proxy_router
 from app.routes import api_auth, api_links, api_system, pages, sub
-from app.state import CONFIG, connections, load_state, log_activity, save_state
+from app.state import CONFIG, connections, ensure_default_link, load_state, log_activity, save_state
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger("MX-UI")
@@ -56,8 +56,8 @@ async def _prune_connections_loop() -> None:
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
     await load_state()
-    if CONFIG.get("panel_location", {}).get("auto_detected", True):
-        CONFIG["panel_location"] = await auto_detect_location()
+    await ensure_default_link()
+    CONFIG["panel_location"] = await auto_detect_location()
 
     xray_ok = False
     for attempt in range(2):
@@ -110,4 +110,4 @@ app.include_router(pages.router)
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT") or os.environ.get("SERVER_PORT") or PUBLIC_PORT)
-    uvicorn.run("main:app", host="0.0.0.0", port=port, log_level="info", workers=1, proxy_headers=True, forwarded_allow_ips="*")
+    uvicorn.run("main:app", host="0.0.0.0", port=port, log_level="info", workers=1, proxy_headers=True, forwarded_allow_ips="*", ws_ping_interval=25, ws_ping_timeout=20)

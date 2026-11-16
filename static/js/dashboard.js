@@ -636,7 +636,7 @@ var _countriesLoaded = false;
 function applyPanelLocationUI(loc) {
   if (!loc) return;
   var flagUrl = loc.flag_url || ('/static/flags/' + (loc.country_code || 'un') + '.svg');
-  var label = (loc.city && loc.city !== 'Auto' ? loc.city + ', ' : '') + (loc.country_name || 'Global');
+  var label = loc.country_name || 'Global';
   ['panel-flag-img', 'sys-flag-img'].forEach(function (id) {
     var img = $(id);
     if (img) { img.src = flagUrl; img.alt = loc.country_code || 'flag'; }
@@ -692,13 +692,9 @@ async function loadSettingsModal() {
 async function saveNetworkSettings() {
   try {
     var cdn = $('settings-cdn-host') ? $('settings-cdn-host').value.trim() : '';
-    var cc = $('settings-country') ? $('settings-country').value : 'us';
-    var city = $('settings-city') ? $('settings-city').value.trim() : '';
-    var r = await J('/api/settings', { cdn_host: cdn, country_code: cc, city: city });
+    var r = await J('/api/settings', { cdn_host: cdn });
     if (!r.ok) throw new Error('Could not save settings');
-    var d = await r.json();
-    if (d.panel_location) applyPanelLocationUI(d.panel_location);
-    toast('Location & network settings saved', 'ok');
+    toast('Network settings saved', 'ok');
     loadConfigs();
   } catch (e) {
     toast(e.message, 'err');

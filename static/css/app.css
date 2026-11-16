@@ -1,3 +1,12 @@
+@font-face { font-family: 'Inter'; src: url('/static/fonts/Inter-Regular.otf') format('opentype'); font-weight: 400; font-display: swap; }
+@font-face { font-family: 'Inter'; src: url('/static/fonts/Inter-Medium.otf') format('opentype'); font-weight: 500; font-display: swap; }
+@font-face { font-family: 'Inter'; src: url('/static/fonts/Inter-SemiBold.otf') format('opentype'); font-weight: 600; font-display: swap; }
+@font-face { font-family: 'Inter'; src: url('/static/fonts/Inter-Bold.otf') format('opentype'); font-weight: 700; font-display: swap; }
+@font-face { font-family: 'Inter'; src: url('/static/fonts/Inter-ExtraBold.otf') format('opentype'); font-weight: 800; font-display: swap; }
+@font-face { font-family: 'MXMono'; src: url('/static/fonts/DejaVuSansMono.ttf') format('truetype'); font-weight: 400; font-display: swap; }
+@font-face { font-family: 'MXMono'; src: url('/static/fonts/DejaVuSansMono-Bold.ttf') format('truetype'); font-weight: 700; font-display: swap; }
+@font-face { font-family: 'MXArabic'; src: url('/static/fonts/NotoKufiArabic-Regular.ttf') format('truetype'); font-weight: 400; font-display: swap; }
+@font-face { font-family: 'MXArabic'; src: url('/static/fonts/NotoKufiArabic-Bold.ttf') format('truetype'); font-weight: 700; font-display: swap; }
 :root {
   --bg: #f4f6f8;
   --surface: #ffffff;
@@ -16,8 +25,8 @@
   --c2: #2f6fed;
   --c3: #d08722;
   --r: 14px;
-  --ui: 'Inter', 'Vazirmatn', system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --mono: 'JetBrains Mono', ui-monospace, Menlo, Consolas, monospace;
+  --ui: 'Inter', 'MXArabic', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --mono: 'MXMono', ui-monospace, Menlo, Consolas, monospace;
   color-scheme: light;
 }
 
@@ -465,9 +474,10 @@ main.dash-main { padding: 22px 0 40px; display: grid; gap: 22px; }
   border: 1px solid var(--line);
   color: var(--ink);
   white-space: nowrap;
-  cursor: pointer;
+  cursor: default;
+  pointer-events: none;
+  user-select: none;
 }
-.loc-badge:hover { border-color: var(--acc); }
 .flag-icon {
   width: 18px;
   height: 13.5px;
@@ -476,4 +486,59 @@ main.dash-main { padding: 22px 0 40px; display: grid; gap: 22px; }
   display: inline-block;
   flex: none;
   box-shadow: 0 0 0 1px rgba(255,255,255,.12);
+}
+
+/* v2.1 design polish */
+:root[data-theme=dark] body {
+  background:
+    radial-gradient(ellipse 75% 45% at 50% -12%, rgba(0, 240, 255, 0.085), transparent 70%),
+    radial-gradient(ellipse 55% 35% at 88% 0%, rgba(46, 229, 157, 0.05), transparent 65%),
+    #07090e;
+}
+.panel {
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.14);
+  transition: border-color .2s ease;
+}
+.btn.primary {
+  background: linear-gradient(135deg, var(--acc) 0%, var(--acc-2) 100%);
+  border-color: transparent;
+  box-shadow: 0 4px 16px rgba(0, 240, 255, 0.18);
+}
+.btn.primary:hover {
+  filter: brightness(1.06);
+  box-shadow: 0 6px 20px rgba(0, 240, 255, 0.26);
+}
+.bar i {
+  background: linear-gradient(90deg, var(--acc), var(--acc-2));
+}
+.stat b {
+  background: linear-gradient(180deg, var(--ink) 40%, var(--mut) 130%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* v2.2 full design refresh */
+.stats { gap: 14px; background: transparent; border: 0; }
+.stats .stat {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  position: relative;
+  overflow: hidden;
+}
+.stats .stat::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--acc), var(--acc-2));
+  opacity: 0.55;
+}
+.stat + .stat { border-left: 1px solid var(--line); }
+header.topbar {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.22);
+}
+.row {
+  transition: background .18s ease;
 }
